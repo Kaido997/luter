@@ -21,7 +21,7 @@ static int next() {
 }
 
 
-int skip() {
+static int skip() {
     int c;
 
     c = next();
@@ -31,7 +31,7 @@ int skip() {
     return (c);
 }
 
-int routext() {
+static int routext() {
     int c;
     char route[32];
     int counter = 0;
@@ -40,7 +40,10 @@ int routext() {
     if (c == ')') {
         route[counter] = '.';
         route[counter + 1] = '\0';
+        printf(" Route -> %s", route);
+        return 0;
     }
+
     while ( c != ')') {
         if (c == '"' || c == '\'') {
             c = skip();
@@ -56,7 +59,7 @@ int routext() {
 
 }
 
-int scanln() {
+static int scanln() {
     int c;
     char phrase[128];
     
@@ -64,17 +67,20 @@ int scanln() {
     int cLine = Line;
     //printf("Line: %d\t", Line);
     while ((c = skip()) && cLine == Line) {
-        //printf("%c", c);
-        if (strcmp(phrase, post) == 0 ||
-            strcmp(phrase, get) == 0 ||
-            strcmp(phrase, delete) == 0 ||
-            strcmp(phrase, put) == 0 ||
-            strcmp(phrase, patch) == 0 ||
-            strcmp(phrase, controller) == 0 
-        ) {
-            printf("FINDED ->\t%s", phrase);
+
+        if (strcmp(phrase, post) == 0) {
             routext();
-        }
+        } else if (strcmp(phrase, get) == 0) {
+            routext();
+        } else if (strcmp(phrase, delete) == 0) {
+            routext();
+        } else if (strcmp(phrase, put) == 0) {
+            routext();
+        } else if (strcmp(phrase, patch) == 0) {
+            routext();
+        } else if (strcmp(phrase, controller) == 0) {
+            routext();
+        }        
         phrase[counter] = c;
         phrase[counter + 1] = '\0';
         counter++;
