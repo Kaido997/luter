@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
-#define MAX_NODES 5
+#define MAX_NODES 16
+
 typedef struct TrieNode TrieNode;
 struct TrieNode {
     char val;
@@ -36,5 +37,12 @@ void freeTrie(TrieNode* node) {
 }
 
 TrieNode* insertRoute(TrieNode* root, char* route) {
- return root;  
+    TrieNode* temp = root;
+     
+    for (int i = 0; i < MAX_NODES; i++) {
+
+         
+    }
+
+    
 };
