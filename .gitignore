@@ -2,3 +2,6 @@
 luter
 *.o
 *.exe
+*.dSYM
+.vscode
+main

@@ -1,15 +1,20 @@
 #include <err.h>    
 #include <stdio.h>
 #include <string.h>
-
+#include "decls.h"
+#include "defs.h"
+#define extern_
+#include "data.h"
+#undef extern_
+#include <stdlib.h>
 FILE *Infile;
 int Line;
-char post[] = "Post";
-char get[] = "Get";
-char delete[] = "Delete";
-char put[] = "Put";
-char patch[] = "Patch";
-char controller[] = "Controller";
+const char post[] = "Post";
+const char get[] = "Get";
+const char delete[] = "Delete";
+const char put[] = "Put";
+const char patch[] = "Patch";
+const char controller[] = "Controller";
 
 static int next() {
   int c;
@@ -31,17 +36,18 @@ static int skip() {
     return (c);
 }
 
-static int routext() {
+TrieNode *root;
+static TrieNode* extract(int isController, int line) {
     int c;
-    char route[32];
     int counter = 0;
-    //printf("Start: %c", c);
+    char* route = malloc(sizeof(char) * 32);
     c = skip();
+
     if (c == ')') {
         route[counter] = '.';
         route[counter + 1] = '\0';
-        printf(" Route -> %s", route);
-        return 0;
+        counter++;
+        //printf("ROUTE -> %s\n", route);
     }
 
     while ( c != ')') {
@@ -50,67 +56,95 @@ static int routext() {
             continue;
         };
         route[counter] = c;
-        route[counter + 1] = '\0';
         c = skip();
         counter++;
     }
-    printf(" Route -> %s", route);
-    return 0;
-
+    route[counter] = '\0';
+    printf("ROUTE -> %s\n", route);
+    if (isController == 1) {
+        root = makeTrieNode(route, 0, line);
+    } else {
+        if (root == NULL) exit(1);
+        root = insertRoute(root, route, line);
+    }
+    return root;
 }
 
-static int scanln() {
+static void scanln() {
     int c;
     char phrase[128];
-    
     int counter = 0;
     int cLine = Line;
-    //printf("Line: %d\t", Line);
     while ((c = skip()) && cLine == Line) {
 
         if (strcmp(phrase, post) == 0) {
-            routext();
+            extract(0, cLine + 1);
         } else if (strcmp(phrase, get) == 0) {
-            routext();
+            extract(0, cLine + 1);
         } else if (strcmp(phrase, delete) == 0) {
-            routext();
+            extract(0, cLine + 1);
         } else if (strcmp(phrase, put) == 0) {
-            routext();
+            extract(0, cLine + 1);
         } else if (strcmp(phrase, patch) == 0) {
-            routext();
-        } else if (strcmp(phrase, controller) == 0) {
-            routext();
-        }        
+            extract(0, cLine + 1);
+        } else if (strcmp(phrase, controller) == 0) { 
+            extract(1, cLine + 1);
+        }
         phrase[counter] = c;
         phrase[counter + 1] = '\0';
         counter++;
     }
-    return 0;    
+}
+
+void triePrint(TrieNode *root) {
+    if (!root) return;
+    TrieNode *tmp = root;
+    printf("%s -> ", tmp->val);
+
+    for (int i = 0; i < MAX_NODES; i++) {
+        triePrint(tmp->child[i]);
+    }
+    printf("\n");
+
+}
+
+void evalTrie(TrieNode* root) {
+    TrieNode* tmp = root;
+    if (tmp->isLeaf == 1 && tmp->isParam == 1) {
+        printf("ERROR: invalid route %s in line %d\n", tmp->val, tmp->line);
+        return;
+    }
+    for (int i = 0; i < MAX_NODES; i++) {
+        if (tmp->child[i] != NULL) {
+            if (tmp->child[i]->isParam == 1) {
+                evalTrie(tmp->child[i]);
+            } 
+        }
+    }
+    return;
 }
 
 int main(int argc, char *argv[]) {
-    
+    argv[1] = "session.controller.ts";
     printf("\nSTART SCANNING: %s\n\n", argv[1]);
-    size_t len;
     int character;
-    char *check;
 
     Infile = fopen(argv[1], "r");
-    if (Infile == NULL)
-        return 0;
+    if (Infile == NULL) exit(0);
 
     while ((character = skip()) != EOF) {
         /*DO whatever you need to do for each line here.*/
         // for each line skip spaces
         if (character == '@') {
-            printf("\n");
-            scanln(); 
-            //printf("%c", character);
+            scanln();
         }
     
     }
-    if (!feof(Infile))
-        err(1, "fgetln");
-
-    return 0;
+    printf("\nEvalutating trie for %s\n", argv[1]);
+    //triePrint(root);
+    //if (!feof(Infile)) err(1, "fgetln");
+    evalTrie(root);    
+    freeTrie(root);
+    exit(0);
 }
+
